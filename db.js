@@ -1,11 +1,12 @@
 
 const sql = require('mssql');
+require('dotenv').config()
 
 const config = {
-  user: 'Magnaapp',
-  password: 'magna2012',
-  server: '123.253.10.200',
-  database: 'MagnaCentralizeLatest',
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  server: process.env.DB_SERVER,
+  database: process.env.DB_NAME,
   options: {
     encrypt: false,
     trustServerCertificate: true
