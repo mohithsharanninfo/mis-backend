@@ -45,11 +45,28 @@ async function updateLocalesInDatabase(selectedRows) {
     }
 
     await transaction.commit();
-    console.log("✅ Locales updated successfully.");
   } catch (err) {
     await transaction.rollback();
     console.error("❌ Error during DB update:", err.message);
     throw err;
+  }
+}
+
+
+async function insertImportedStylecode(stylecode, IsImported, LocaleIN, LocaleSG) {
+  try {
+    await pool
+      .request()
+      .input("Stylecode", sql.VarChar, stylecode)
+      .input("IsImported", sql.Bit, IsImported)
+      .input("LocaleIN", sql.Bit, LocaleIN)
+      .input("LocaleSG", sql.Bit, LocaleSG)
+      .query(
+        `INSERT INTO ImportedStylecodesIn_Sg (Stylecode, IsImported, LocaleIN, LocaleSG)
+         VALUES (@Stylecode, @IsImported, @LocaleIN, @LocaleSG)`
+      );
+  } catch (err) {
+    console.error("Error inserting imported stylecode:", err);
   }
 }
 
@@ -74,8 +91,19 @@ async function sendStylecodesToApi(req, res) {
           promise: axios
             .post(apiUrls.Productimport_IN, payload, {
               headers: { "Content-Type": "application/json" },
+            }).then((response) => {
+              if (response?.data && response?.data?.success) {
+                insertImportedStylecode(Stylecode, 1, LocaleIN, LocaleSG)
+              } else {
+                insertImportedStylecode(Stylecode, 0, LocaleIN, LocaleSG)
+                failedStylecodes.push({
+                  Stylecode,
+                  reason: `API error (IN) - ${response.data.message || 'Unknown error'}`,
+                });
+              }
             })
             .catch((err) => {
+              insertImportedStylecode(Stylecode, 0, LocaleIN, LocaleSG)
               failedStylecodes.push({
                 Stylecode,
                 reason: `API error (IN) - ${err.message}`,
@@ -91,8 +119,19 @@ async function sendStylecodesToApi(req, res) {
           promise: axios
             .post(apiUrls.Productimport_SG, payload, {
               headers: { "Content-Type": "application/json" },
+            }).then((response) => {
+              if (response?.data && response?.data?.success) {
+                insertImportedStylecode(Stylecode, 1, LocaleIN, LocaleSG)
+              } else {
+                insertImportedStylecode(Stylecode, 0, LocaleIN, LocaleSG)
+                failedStylecodes.push({
+                  Stylecode,
+                  reason: `API error (SG) - ${response.data.message || 'Unknown error'}`,
+                });
+              }
             })
             .catch((err) => {
+              insertImportedStylecode(Stylecode, 0, LocaleIN, LocaleSG)
               failedStylecodes.push({
                 Stylecode,
                 reason: `API error (SG) - ${err.message}`,

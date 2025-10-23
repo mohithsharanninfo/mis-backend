@@ -1,9 +1,7 @@
 const { sql, pool } = require('../db');
 
-
 const fetchStylecodeImages = async (req, res) => {
     try {
-
         const { stylecodes } = req.body;
 
         if (!stylecodes || stylecodes.length === 0) {
