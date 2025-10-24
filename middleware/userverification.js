@@ -4,7 +4,6 @@ require("dotenv").config();
 const userVerification = async (req, res, next) => {
     try {
          const token = await req.cookies.token  // getting token based on cookie no need to pass it from header
-
         // const authHeader = await req.headers['authorization'] // getting token based on header need to pass it from header
         // if (!authHeader) {
         //     return res.status(404).json({ error: "Token not found ! Please login to continue" })

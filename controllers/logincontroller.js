@@ -27,7 +27,7 @@ const loginController = async (req, res) => {
         }
 
         // Compare MD5 password
-        if (!isValidPassword(Password, process.env.Password_Id || user.Password)) {
+        if (!isValidPassword(Password, user.Password)) {
             return res.status(401).json({ success: false, message: 'Invalid username or password' });
         }
 
