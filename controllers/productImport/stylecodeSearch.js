@@ -1,4 +1,4 @@
-const { sql, pool } = require('../db');
+const { sql, pool } = require('../../db');
 
 const stylecodeSearchIn = async (req, res) => {
     try {

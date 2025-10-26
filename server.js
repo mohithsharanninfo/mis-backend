@@ -16,6 +16,11 @@ app.use(cors({
 }))
 app.use(cookieParser())
 
+// app.use((req, res, next) => {
+//   res.setHeader('Cache-Control', 'no-store');
+//   next();
+// });
+
 //app.use(bodyParser.json());
 
 app.use('/api', require('./routes/index'))

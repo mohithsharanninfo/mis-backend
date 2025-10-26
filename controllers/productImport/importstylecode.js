@@ -1,5 +1,5 @@
 const axios = require("axios");
-const { sql, pool } = require("../db");
+const { sql, pool } = require("../../db");
 
 async function getApiUrls() {
   const result = await pool.request().query(`

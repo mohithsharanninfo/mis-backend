@@ -72,6 +72,16 @@ const getUserDetails = async (req, res) => {
     }
 }
 
+const logoutUser = async (req, res) => {
+    try {
+        res.clearCookie('token', { httpOnly: true });
+        res.status(200).json({ message: 'Logged out successfully', success: true });
+    } catch (err) {
+        throw new Error(err)
+    }
+
+}
+
 module.exports = {
-    loginController, getUserDetails
+    loginController, getUserDetails,logoutUser
 }
