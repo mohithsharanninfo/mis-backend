@@ -10,9 +10,29 @@ const deliverySatus = async (req, res) => {
         if (toDate) request.input('ToDate', sql.DateTime, toDate);
 
         const result = await request.query(`
-            select od.barcode_no, OrderStatus,om.order_no,mobile_no,cust_name,delivery_date,Logistics,om.branch_order_no,Awno from OrderMaster om 
-             join  orderdetails od ON om.order_no = od.order_no where order_date BETWEEN @FromDate AND @ToDate`
-        );
+            SELECT
+                s.ecomorderid,
+                s.Orderrefno,
+                
+                -- SHIPPED info----
+                s.AwNo,
+                s.logisticPartner,
+                s.Createdon AS ShippedOn,
+                s.Status ,
+
+                -- DELIVERED info---
+                d.Createdon AS DeliveredOn,
+                d.Status AS Delivered_Message
+
+                FROM Ecom_Tran_Status s
+                LEFT JOIN Ecom_Tran_Status d 
+                    ON s.ecomorderid = d.ecomorderid
+                    AND d.Status = 'DELIVERED'
+                WHERE s.Status = 'SHIPPED'
+                AND LTRIM(RTRIM(ISNULL(s.AwNo, ''))) <> '' AND  s.Createdon >= @FromDate AND  s.Createdon < DATEADD(DAY, 1, @ToDate)
+        `);
+
+        res.setHeader('Cache-Control', 'no-store')
 
         res.status(200).json({ success: true, data: result?.recordset });
 
@@ -32,18 +52,26 @@ const searchOrderstatus = async (req, res) => {
         request.input('search', sql.VarChar, search)
 
         const result = await request.query(`
-        SELECT 
-            od.barcode_no,
-            om.OrderStatus,
-            om.order_no,
-            om.mobile_no,
-            om.cust_name,
-            om.delivery_date,
-            om.Logistics,
-            om.Awno
-        FROM OrderMaster om
-        JOIN orderdetails od ON om.order_no = od.order_no
-        WHERE (@search IS NULL OR om.order_no = @search OR  od.barcode_no = @search)
+           SELECT
+                s.ecomorderid,
+                s.Orderrefno,
+                
+                -- SHIPPED info----
+                s.AwNo,
+                s.logisticPartner,
+                s.Createdon AS ShippedOn,
+                s.Status ,
+
+                -- DELIVERED info---
+                d.Createdon AS DeliveredOn,
+                d.Status AS Delivered_Message
+
+                FROM Ecom_Tran_Status s
+                LEFT JOIN Ecom_Tran_Status d 
+                    ON s.ecomorderid = d.ecomorderid
+                    AND d.Status = 'DELIVERED'
+                WHERE s.Status = 'SHIPPED'
+                AND LTRIM(RTRIM(ISNULL(s.AwNo, ''))) <> '' AND (@search IS NULL OR s.ecomorderid = @search OR  s.AwNo = @search)
       `);
 
         res.json({ success: true, data: result?.recordset });

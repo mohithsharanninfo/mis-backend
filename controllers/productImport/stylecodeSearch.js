@@ -12,31 +12,27 @@ const stylecodeSearchIn = async (req, res) => {
         request.input('searchTerm', sql.VarChar, searchTerm);
         const result = await request.query(`
         SELECT 
-        kbm.order_no,
-        kbm.sold_flag,
-        kbm.barcode_no,
-        kbm.StyleCode,
-        kbm.branch_code,
-        mpc.isstock,
-        mpc.islock,
-        mpc.isactive,
-        mpc.productpushed,
-        mpc.LocaleIN AS mpc_LocaleIN,
-        mpcsa.productpushed AS mpcsa_productPushed,
-        mpcsa.isapproved,
-        mpcsa.ExportedUrlKey,
-        mpcsa.LocaleIN
-    FROM 
-        KTTU_BARCODE_MASTER AS kbm
-        INNER JOIN mis.MarketPlaceCatalog AS mpc 
-            ON kbm.barcode_no = mpc.sku
-        INNER JOIN mis.MarketPlaceCatalog_StyleCode_Attributes AS mpcsa 
-            ON mpc.StyleCode = mpcsa.StyleCode
-     WHERE 
-    mpc.productPushed = '2' and  mpc.LocaleIN ='en-IN' and
-    mpcsa.productPushed = '2' and mpcsa.LocaleIN ='en-IN'  and mpcsa.ExportedUrlKey IS NOT NULL
-    and mpc.StyleCode 
-    in(select Stylecode from ImportedStylecodesIn_Sg where IsImported = '1' and Stylecode = @searchTerm)`);
+            mpc.sku,
+            mpc.StyleCode,
+            mpc.isstock,
+            mpc.islock,
+            mpc.isactive,
+            mpc.productpushed,
+            mpc.ListingBranchCode,
+            mpc.LocaleIN AS mpc_LocaleIN,
+            mpcsa.productpushed AS mpcsa_productPushed,
+            mpcsa.isapproved,
+            mpcsa.ExportedUrlKey,
+            mpcsa.LocaleIN
+        FROM 
+            mis.MarketPlaceCatalog AS mpc 
+            JOIN mis.MarketPlaceCatalog_StyleCode_Attributes AS mpcsa 
+                ON mpc.StyleCode = mpcsa.StyleCode
+        WHERE 
+        mpc.productPushed = '2' and  mpc.LocaleIN ='en-IN' and
+        mpcsa.productPushed = '2' and mpcsa.LocaleIN ='en-IN'  and mpcsa.ExportedUrlKey IS NOT NULL
+        and mpc.StyleCode 
+         in(select Stylecode from ImportedStylecodesIn_Sg where IsImported = '1' and LocaleIN='1' and Stylecode = @searchTerm)`);
 
         const response = result.recordset;
 
@@ -64,32 +60,28 @@ const stylecodeSearchSg = async (req, res) => {
         let request = pool.request();
         request.input('searchTerm', sql.VarChar, searchTerm);
         const result = await request.query(`
-            SELECT 
-            kbm.order_no,
-            kbm.sold_flag,
-            kbm.barcode_no,
-            kbm.StyleCode,
-            kbm.branch_code,
+           SELECT 
+            mpc.sku,
+            mpc.StyleCode,
             mpc.isstock,
             mpc.islock,
             mpc.isactive,
             mpc.productpushedsg,
+            mpc.ListingBranchCode,
             mpc.LocaleSG AS mpc_LocaleSG,
             mpcsa.productpushedsg AS mpcsa_productPushedsg,
             mpcsa.isapproved,
             mpcsa.ExportedUrlKey,
             mpcsa.LocaleSG
-        FROM 
-            KTTU_BARCODE_MASTER AS kbm
-            INNER JOIN mis.MarketPlaceCatalog AS mpc 
-                ON kbm.barcode_no = mpc.sku
-            INNER JOIN mis.MarketPlaceCatalog_StyleCode_Attributes AS mpcsa 
-                ON mpc.StyleCode = mpcsa.StyleCode
-        WHERE 
-        mpc.productpushedsg = '2' and  mpc.LocaleSG ='en-SG' and
-        mpcsa.productpushedsg = '2' and mpcsa.LocaleSG ='en-SG'  and mpcsa.ExportedUrlKey IS NOT NULL
-        and mpc.StyleCode 
-            in(select Stylecode from ImportedStylecodesIn_Sg where IsImported = '1' and Stylecode = @searchTerm)`);
+            FROM 
+                mis.MarketPlaceCatalog AS mpc 
+                JOIN mis.MarketPlaceCatalog_StyleCode_Attributes AS mpcsa 
+                    ON mpc.StyleCode = mpcsa.StyleCode
+            WHERE 
+            mpc.productpushedsg = '2' and  mpc.LocaleSG ='en-SG' and
+            mpcsa.productpushedsg = '2' and mpcsa.LocaleSG ='en-SG'  and mpcsa.ExportedUrlKey IS NOT NULL
+            and mpc.StyleCode 
+            in(select Stylecode from ImportedStylecodesIn_Sg where IsImported = '1' and LocaleSG='1' and Stylecode = @searchTerm)`);
 
         const response = result.recordset;
 

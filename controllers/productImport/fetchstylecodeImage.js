@@ -21,14 +21,14 @@ const fetchStylecodeImages = async (req, res) => {
         const result = await request.query(`SELECT * FROM mis.vStylecodeBarcodeData WHERE Stylecode IN (${inClause})`);
 
         const mergedData = result?.recordset.map(row => {
-        const match = stylecodes.find(item => item.Stylecode === row.Stylecode);
+            const match = stylecodes.find(item => item.Stylecode === row.Stylecode);
 
             return {
                 ...row,
                 ...match
             };
         });
-
+        res.setHeader('Cache-Control', 'no-store')
         res.status(200).json({ success: true, data: mergedData });
 
     } catch (err) {
