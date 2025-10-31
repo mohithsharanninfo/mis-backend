@@ -80,11 +80,44 @@ async function sendStylecodesToApi(req, res) {
     const batchSize = 10;
     const apiCalls = [];
 
-    for (const item of jsonPayload) {
-      const payload = JSON.stringify([item]);
-      const { Stylecode, LocaleIN, LocaleSG } = item;
+    const stylecodes = jsonPayload.map(item => item.Stylecode);
+    const sku = jsonPayload.map(item => item.Sku);
 
-      if (LocaleIN == 1) {
+    const stylecodeList = stylecodes.map(s => `'${s.replace(/'/g, "''")}'`).join(",");
+    const skuList = sku.map(s => `'${s.replace(/'/g, "''")}'`).join(",");
+
+    const query = `
+      SELECT StyleCode, MarketPlaceCode,LocaleIN, LocaleSG
+      FROM mis.MarketPlaceCatalog
+      WHERE MarketPlaceCode = 'BHIMA'
+      AND StyleCode IN (${stylecodeList}) AND Sku IN (${skuList})
+    `;
+
+    const dbResult = await pool.request().query(query);
+
+    const dbMap = new Map();
+
+    for (const row of dbResult?.recordset || []) {
+      dbMap.set(row.StyleCode, {
+        Locale_IN: row.LocaleIN,
+        Locale_SG: row.LocaleSG,
+      });
+    }
+
+    const matchedRecords = jsonPayload.filter((item) => dbMap.has(item.Stylecode));
+
+    const mergedRecords = matchedRecords.map((item) => ({
+      ...item,
+      ...dbMap.get(item.Stylecode),
+    }));
+
+    for (const item of mergedRecords) {
+      const payload = JSON.stringify([item]);
+      const { Stylecode, LocaleIN, LocaleSG, Locale_IN, Locale_SG } = item;
+
+      console.log('item', item);
+
+      if (LocaleIN == 1 && Locale_IN == 'en-IN') {
         apiCalls.push({
           Stylecode,
           locale: "IN",
@@ -112,7 +145,7 @@ async function sendStylecodesToApi(req, res) {
         });
       }
 
-      if (LocaleSG == 1) {
+      if (LocaleSG == 1 && Locale_SG == 'en-SG') {
         apiCalls.push({
           Stylecode,
           locale: "SG",
@@ -147,9 +180,9 @@ async function sendStylecodesToApi(req, res) {
       await Promise.allSettled(batch.map((b) => b.promise));
     }
 
-    await updateLocalesInDatabase(jsonPayload);
+    await updateLocalesInDatabase(mergedRecords);
 
-    const successCount = jsonPayload.length - failedStylecodes.length;
+    const successCount = mergedRecords?.length - failedStylecodes?.length;
 
     res.setHeader('Cache-Control', 'no-store')
 
@@ -167,119 +200,6 @@ async function sendStylecodesToApi(req, res) {
     });
   }
 }
-
-// async function sendStylecodesToApi(req, res) {
-//   const { jsonPayload } = req.body;
-//   const failedStylecodes = [];
-
-//   try {
-//     const apiUrls = await getApiUrls();
-
-//     const batchSize = 10;
-//     const apiCalls = [];
-
-//     for (const item of jsonPayload) {
-//       //const payload = JSON.stringify([item]);
-//       const { Stylecode, Sku, LocaleIN, LocaleSG } = item;
-
-//       if (LocaleIN == 1) {
-//         const checklocaleIn = await pool.request().
-//           query(`select * from mis.MarketPlaceCatalog where MarketPlaceCode='BHIMA' AND StyleCode='${Stylecode}' AND SKU='${Sku}' AND LocaleIN='en-IN'`);
-
-//         for (const value of checklocaleIn?.recordset) {
-//           const payload = JSON.stringify([value]);
-//           const { Stylecode, LocaleIN, LocaleSG } = value;
-//           apiCalls.push({
-//             Stylecode,
-//             locale: "IN",
-//             promise: axios
-//               .post(apiUrls?.Productimport_IN, payload, {
-//                 headers: { "Content-Type": "application/json" },
-//               }).then((response) => {
-//                 if (response?.data && response?.data?.success) {
-//                   insertImportedStylecode(Stylecode, 1, LocaleIN, LocaleSG)
-//                 } else {
-//                   insertImportedStylecode(Stylecode, 0, LocaleIN, LocaleSG)
-//                   failedStylecodes.push({
-//                     Stylecode,
-//                     reason: `API error (IN) - ${response.data.message || 'Unknown error'}`,
-//                   });
-//                 }
-//               })
-//               .catch((err) => {
-//                 insertImportedStylecode(Stylecode, 0, LocaleIN, LocaleSG)
-//                 failedStylecodes.push({
-//                   Stylecode,
-//                   reason: `API error (IN) - ${err.message}`,
-//                 });
-//               }),
-//           });
-//         }
-//       }
-
-//       if (LocaleSG == 1) {
-//         const checklocaleSg = await pool.request().
-//           query(`select * from mis.MarketPlaceCatalog where MarketPlaceCode='BHIMA' AND StyleCode='${Stylecode}' AND SKU='${Sku}' AND LocaleIN='en-SG'`);
-//         for (const value of checklocaleSg?.recordset) {
-//           const payload = JSON.stringify([value]);
-//           const { Stylecode, LocaleIN, LocaleSG } = value;
-
-//           apiCalls.push({
-//             Stylecode,
-//             locale: "SG",
-//             promise: axios
-//               .post(apiUrls?.Productimport_IN, payload, {
-//                 headers: { "Content-Type": "application/json" },
-//               }).then((response) => {
-//                 if (response?.data && response?.data?.success) {
-//                   insertImportedStylecode(Stylecode, 1, LocaleIN, LocaleSG)
-//                 } else {
-//                   insertImportedStylecode(Stylecode, 0, LocaleIN, LocaleSG)
-//                   failedStylecodes.push({
-//                     Stylecode,
-//                     reason: `API error (SG) - ${response.data.message || 'Unknown error'}`,
-//                   });
-//                 }
-//               })
-//               .catch((err) => {
-//                 insertImportedStylecode(Stylecode, 0, LocaleIN, LocaleSG)
-//                 failedStylecodes.push({
-//                   Stylecode,
-//                   reason: `API error (SG) - ${err.message}`,
-//                 });
-//               }),
-//           });
-//         }
-
-//       }
-//     }
-
-//     // Process in controlled batches
-//     for (let i = 0; i < apiCalls.length; i += batchSize) {
-//       const batch = apiCalls.slice(i, i + batchSize);
-//       await Promise.allSettled(batch.map((b) => b.promise));
-//     }
-
-//     await updateLocalesInDatabase(jsonPayload);
-
-//     const successCount = jsonPayload.length - failedStylecodes.length;
-
-//     res.setHeader('Cache-Control', 'no-store')
-
-//     res.status(200).json({
-//       success: failedStylecodes.length === 0,
-//       message: `Import completed: ${successCount}/${jsonPayload.length} succeeded.`,
-//       failedStylecodes,
-//     });
-//   } catch (err) {
-//     res.status(500).json({
-//       success: false,
-//       message: "Import failed unexpectedly",
-//       error: err.message,
-//       failedStylecodes,
-//     });
-//   }
-// }
 
 
 module.exports = { sendStylecodesToApi };
