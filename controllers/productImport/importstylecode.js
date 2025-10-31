@@ -151,6 +151,8 @@ async function sendStylecodesToApi(req, res) {
 
     const successCount = jsonPayload.length - failedStylecodes.length;
 
+    res.setHeader('Cache-Control', 'no-store')
+
     res.status(200).json({
       success: failedStylecodes.length === 0,
       message: `Import completed: ${successCount}/${jsonPayload.length} succeeded.`,

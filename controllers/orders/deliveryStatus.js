@@ -71,8 +71,10 @@ const searchOrderstatus = async (req, res) => {
                     ON s.ecomorderid = d.ecomorderid
                     AND d.Status = 'DELIVERED'
                 WHERE s.Status = 'SHIPPED'
-                AND LTRIM(RTRIM(ISNULL(s.AwNo, ''))) <> '' AND (@search IS NULL OR s.ecomorderid = @search OR  s.AwNo = @search)
+                AND LTRIM(RTRIM(ISNULL(s.AwNo, ''))) <> '' AND (@search IS NULL OR s.ecomorderid = @search OR s.AwNo = @search)
       `);
+
+        res.setHeader('Cache-Control', 'no-store')
 
         res.json({ success: true, data: result?.recordset });
     } catch (err) {

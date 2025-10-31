@@ -97,4 +97,24 @@ const stylecodeSearchSg = async (req, res) => {
     }
 }
 
-module.exports = { stylecodeSearchIn, stylecodeSearchSg }
+const stylecodeSearchImportflow = async (req, res) => {
+    try {
+        const { search } = req.query;
+        if (!search) {
+            return res.status(400).json({ success: false, message: "Stylecode is required" })
+        }
+
+        let request = pool.request();
+
+        request.input('search', sql.VarChar, search);
+
+        const result = await request.query(`SELECT * FROM mis.vStylecodeBarcodeData WHERE Stylecode = @search OR Sku = @search`);
+        res.setHeader('Cache-Control', 'no-store')
+        res.status(200).json({ success: true, data: result?.recordset })
+
+    } catch (err) {
+        res.status(500).json({ success: false, message: "Something went wrong !" })
+    }
+}
+
+module.exports = { stylecodeSearchIn, stylecodeSearchSg,stylecodeSearchImportflow}

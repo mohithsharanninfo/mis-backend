@@ -4,7 +4,7 @@ const userVerification = require('../middleware/userverification');
 const { fetchStylecodeImages } = require('../controllers/productImport/fetchstylecodeImage');
 const { sendStylecodesToApi } = require('../controllers/productImport/importstylecode');
 const { fetchImportedProducts, fetchImportedProductsSg } = require('../controllers/productImport/fetchImportedStylecodes');
-const { stylecodeSearchIn, stylecodeSearchSg } = require('../controllers/productImport/stylecodeSearch');
+const { stylecodeSearchIn, stylecodeSearchSg, stylecodeSearchImportflow } = require('../controllers/productImport/stylecodeSearch');
 const { deliverySatus, searchOrderstatus } = require('../controllers/orders/deliveryStatus');
 
 const router = express.Router();
@@ -20,6 +20,7 @@ router.get('/importedProductsSg',fetchImportedProductsSg)
 
 router.get('/searchstylecodeIn',stylecodeSearchIn)
 router.get('/searchstylecodeSg',stylecodeSearchSg)
+router.get('/searchstylecodeCsv',stylecodeSearchImportflow)
 
 router.get('/deliveryStatus',deliverySatus)
 router.get('/searchStatus',searchOrderstatus)

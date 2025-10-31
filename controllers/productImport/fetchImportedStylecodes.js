@@ -1,8 +1,8 @@
- const { sql, pool } = require('../../db');
- 
- const fetchImportedProducts = async (req, res) => {
+const { sql, pool } = require('../../db');
+
+const fetchImportedProducts = async (req, res) => {
   try {
-    const { fromDate, toDate } = req.query; 
+    const { fromDate, toDate } = req.query;
 
     const request = pool.request();
 
@@ -10,6 +10,8 @@
     if (toDate) request.input('ToDate', sql.DateTime, toDate);
 
     const result = await request.execute('dbo.GetImportedProductsIn');
+
+    res.setHeader('Cache-Control', 'no-store')
 
     res.status(200).json({
       success: true,
@@ -23,9 +25,9 @@
 };
 
 
- const fetchImportedProductsSg = async (req, res) => {
+const fetchImportedProductsSg = async (req, res) => {
   try {
-    const { fromDate, toDate } = req.query; 
+    const { fromDate, toDate } = req.query;
 
     const request = pool.request();
 
@@ -33,6 +35,8 @@
     if (toDate) request.input('ToDate', sql.DateTime, toDate);
 
     const result = await request.execute('dbo.GetImportedProductsSg');
+
+    res.setHeader('Cache-Control', 'no-store')
 
     res.status(200).json({
       success: true,
@@ -46,6 +50,6 @@
 };
 
 module.exports = {
-    fetchImportedProducts,
-    fetchImportedProductsSg
+  fetchImportedProducts,
+  fetchImportedProductsSg
 }
