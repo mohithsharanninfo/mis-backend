@@ -115,8 +115,6 @@ async function sendStylecodesToApi(req, res) {
       const payload = JSON.stringify([item]);
       const { Stylecode, LocaleIN, LocaleSG, Locale_IN, Locale_SG } = item;
 
-      console.log('item', item);
-
       if (LocaleIN == 1 && Locale_IN == 'en-IN') {
         apiCalls.push({
           Stylecode,
@@ -202,4 +200,53 @@ async function sendStylecodesToApi(req, res) {
 }
 
 
-module.exports = { sendStylecodesToApi };
+
+const reImportStylecode = async (req, res) => {
+  try {
+
+    const { Stylecode } = req.body;
+
+    let request = pool.request();
+
+     request.input(`Stylecode`, sql.VarChar, Stylecode)
+
+    const result = await request.query(`SELECT * FROM mis.vStylecodeBarcodeData WHERE Stylecode=@Stylecode`);
+
+    const mergedData = result?.recordset.map(row => {
+   
+      return {
+        ...row,
+        ...req.body
+      };
+    });
+    
+    const apiUrls = await getApiUrls();
+
+    const response = await axios.post(apiUrls.Productimport_IN, mergedData, {
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (response?.data && response.data.success) {
+
+      await updateLocalesInDatabase(mergedData);
+
+      res.setHeader('Cache-Control', 'no-store')
+
+      res.status(200).json({
+        success: true,
+        message: "Re-import successful.",
+      });
+    }
+
+  } catch (err) {
+    console.error("Re-import failed:", err);
+    res.status(500).json({
+      success: false,
+      message: "Import failed unexpectedly",
+      error: err.message,
+    });
+  }
+};
+
+
+module.exports = { sendStylecodesToApi,reImportStylecode };
