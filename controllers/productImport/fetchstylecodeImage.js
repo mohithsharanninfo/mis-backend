@@ -21,7 +21,7 @@ const fetchStylecodeImages = async (req, res) => {
         const result = await request.query(`SELECT * FROM mis.vStylecodeBarcodeData WHERE Stylecode IN (${inClause})`);
 
         const mergedData = result?.recordset.map(row => {
-            const match = stylecodes.find(item => item.Stylecode === row.Stylecode);
+            const match = stylecodes.find(item => item.Stylecode == row.Stylecode);
 
             return {
                 ...row,
@@ -37,6 +37,23 @@ const fetchStylecodeImages = async (req, res) => {
     }
 };
 
+const fetchProductImage = async (req, res) => {
+    try {
+        const { Stylecode } = req.body;
+
+        let request = pool.request();
+
+        request.input('Stylecode', sql.VarChar, Stylecode);
+
+        const result = await request.query(`select * from mis.StyleCodeImageURL where StyleCode=@Stylecode`);
+
+        res.status(200).json({ success: true, data: result?.recordset});
+
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+}
 
 
-module.exports = { fetchStylecodeImages }
+
+module.exports = { fetchStylecodeImages, fetchProductImage }
