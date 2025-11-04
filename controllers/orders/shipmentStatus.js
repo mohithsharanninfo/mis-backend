@@ -1,6 +1,6 @@
 const { sql, pool } = require('../../db');
 
-const deliverySatus = async (req, res) => {
+const shipmentSatus = async (req, res) => {
 
     const { fromDate, toDate } = req.query;
     try {
@@ -82,4 +82,4 @@ const searchOrderstatus = async (req, res) => {
     }
 };
 
-module.exports = { deliverySatus, searchOrderstatus }
+module.exports = { shipmentSatus, searchOrderstatus }

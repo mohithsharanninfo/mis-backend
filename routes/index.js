@@ -5,15 +5,18 @@ const { fetchStylecodeImages, fetchProductImage } = require('../controllers/prod
 const { sendStylecodesToApi, reImportStylecode } = require('../controllers/productImport/importstylecode');
 const { fetchImportedProducts, fetchImportedProductsSg, checkImportedStylecode } = require('../controllers/productImport/fetchImportedStylecodes');
 const { stylecodeSearchIn, stylecodeSearchSg, stylecodeSearchImportflow } = require('../controllers/productImport/stylecodeSearch');
-const { deliverySatus, searchOrderstatus } = require('../controllers/orders/deliveryStatus');
+const { searchOrderstatus, shipmentSatus } = require('../controllers/orders/shipmentStatus');
+const { pickedItemsOnly } = require('../controllers/orders/pickedItems');
 
 const router = express.Router();
 
+//////////////Auth routes ////////////
 router.post('/login',loginController);
 router.post('/logout', logoutUser);
-
 router.get('/getuserdetails', userVerification, getUserDetails)
 
+
+/////////////Product import related routes //////////////////
 router.post('/getStylecodeImages', fetchStylecodeImages)
 router.post('/getProductImages', fetchProductImage)
 
@@ -27,7 +30,11 @@ router.get('/searchstylecodeSg',stylecodeSearchSg)
 router.get('/searchstylecodeCsv',stylecodeSearchImportflow)
 router.post('/checkstylecodeimport',checkImportedStylecode)
 
-router.get('/deliveryStatus',deliverySatus)
+
+////////////////Orders related ///////////////
+router.get('/shipmentStatus',shipmentSatus)
 router.get('/searchStatus',searchOrderstatus)
+router.get('/onlypickedItems',pickedItemsOnly)
+
 
 module.exports = router;

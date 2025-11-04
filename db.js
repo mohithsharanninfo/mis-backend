@@ -13,6 +13,17 @@ const config = {
   }
 };
 
+const db2Config = {
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  server: process.env.DB_SERVER,
+  database: process.env.DB_NAME_BOS,
+  options: {
+    encrypt: false,
+    trustServerCertificate: true
+  }
+};
+
 const pool = new sql.ConnectionPool(config);
 
 const poolConnect = pool.connect()
@@ -23,6 +34,18 @@ const poolConnect = pool.connect()
     console.error('❌ MSSQL Database connection failed:', err);
   });
 
+const poolBos = new sql.ConnectionPool(db2Config);
+
+const poolBosConnect = poolBos.connect()
+.then(() => {
+    console.log('✅ BOS Database connected successfully!');
+  })
+  .catch(err => {
+    console.error('❌ BOS Database connection failed:', err);
+  });
+
+
+
 
 pool.on('error', err => {
   console.error('SQL errors', err);
@@ -32,5 +55,7 @@ pool.on('error', err => {
 module.exports = {
   sql,
   poolConnect,
-  pool
+  pool,
+  poolBos,
+  poolBosConnect
 }
