@@ -2,14 +2,15 @@ const { sql, pool } = require('../../db');
 
 const fetchImportedProducts = async (req, res) => {
   try {
-    const { fromDate, toDate } = req.query;
+    const { fromDate, toDate,Locale } = req.query;
 
     const request = pool.request();
 
-    if (fromDate) request.input('FromDate', sql.DateTime, fromDate);
-    if (toDate) request.input('ToDate', sql.DateTime, toDate);
+     request.input('Locale', sql.NVarChar(10), Locale)
+     request.input('FromDate', sql.DateTime, fromDate)
+     request.input('ToDate', sql.DateTime, toDate)
 
-    const result = await request.execute('dbo.GetImportedProductsIn');
+    const result = await request.query(`SELECT * FROM dbo.fnGetImportedProducts(@Locale, @FromDate, @ToDate)`);
 
     res.setHeader('Cache-Control', 'no-store')
 
@@ -25,29 +26,29 @@ const fetchImportedProducts = async (req, res) => {
 };
 
 
-const fetchImportedProductsSg = async (req, res) => {
-  try {
-    const { fromDate, toDate } = req.query;
+// const fetchImportedProductsSg = async (req, res) => {
+//   try {
+//     const { fromDate, toDate } = req.query;
 
-    const request = pool.request();
+//     const request = pool.request();
 
-    if (fromDate) request.input('FromDate', sql.DateTime, fromDate);
-    if (toDate) request.input('ToDate', sql.DateTime, toDate);
+//     if (fromDate) request.input('FromDate', sql.DateTime, fromDate);
+//     if (toDate) request.input('ToDate', sql.DateTime, toDate);
 
-    const result = await request.execute('dbo.GetImportedProductsSg');
+//     const result = await request.execute('dbo.GetImportedProductsSg');
 
-    res.setHeader('Cache-Control', 'no-store')
+//     res.setHeader('Cache-Control', 'no-store')
 
-    res.status(200).json({
-      success: true,
-      count: result.recordset.length,
-      data: result.recordset,
-    });
-  } catch (error) {
-    console.error('❌ Error fetching imported products:', error);
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
+//     res.status(200).json({
+//       success: true,
+//       count: result.recordset.length,
+//       data: result.recordset,
+//     });
+//   } catch (error) {
+//     console.error('❌ Error fetching imported products:', error);
+//     res.status(500).json({ success: false, message: error.message });
+//   }
+// };
 
 const checkImportedStylecode = async (req, res) => {
   try {
@@ -134,6 +135,5 @@ const checkImportedStylecode = async (req, res) => {
 
 module.exports = {
   fetchImportedProducts,
-  fetchImportedProductsSg,
   checkImportedStylecode
 }
