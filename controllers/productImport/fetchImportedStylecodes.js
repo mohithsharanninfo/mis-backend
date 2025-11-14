@@ -67,6 +67,7 @@ const checkImportedStylecode = async (req, res) => {
           kbm.order_no,
           kbm.barcode_no,
           kbm.StyleCode,
+          mc.SKU,
           mc.isstock,
           mc.islock,
           mc.isactive,
@@ -90,7 +91,7 @@ const checkImportedStylecode = async (req, res) => {
       res.status(200).json({
         success: true,
         count: result.recordset.length,
-        data: result.recordset || null,
+        data: [result.recordset[0] || null],
       });
 
 
@@ -100,6 +101,7 @@ const checkImportedStylecode = async (req, res) => {
               kbm.order_no,
               kbm.barcode_no,
               kbm.StyleCode,
+              mc.SKU,
               mc.isstock,
               mc.islock,
               mc.isactive,
